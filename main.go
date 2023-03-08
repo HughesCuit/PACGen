@@ -3,27 +3,20 @@ package main
 import (
   "fmt"
   "net/http"
-  "strings"
+
+  "github.com/gin-gonic/gin"
 )
 
 func main() {
-  http.HandleFunc("/proxy/", func(w http.ResponseWriter, r *http.Request) {
-    path := strings.Split(r.URL.Path, "/")
-    if len(path) < 5 || path[4] != "global.pac" {
-      http.Error(w, "Not found", http.StatusNotFound)
-      return
-    }
-    host := path[2]
-    port := path[3]
-    js := fmt.Sprintf(`function FindProxyForURL(url, host) { return "SOCKS %s:%s"; }`, host, port)
-    w.Header().Set("Content-Type", "application/x-ns-proxy-autoconfig")
-    w.Write([]byte(js))
+  r := gin.Default()
+  r.GET("/", func(c *gin.Context) {
+    c.String(http.StatusOK, "Hello World!")
   })
-  http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-    w.Write([]byte("Hello World!"))
+  r.GET("/proxy/:host/:port/global.pac", func(c *gin.Context) {
+    host := c.Param("host")
+    port := c.Param("port")
+    jsContent := fmt.Sprintf(`function FindProxyForURL(url, host) { return "SOCKS %s:%s"; }`, host, port)
+    c.String(http.StatusOK, jsContent)
   })
-  err := http.ListenAndServe(":10086", nil)
-  if err != nil {
-    panic(err)
-  }
+  r.Run(":10086")
 }
