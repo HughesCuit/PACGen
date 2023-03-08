@@ -19,7 +19,10 @@ func main() {
     w.Header().Set("Content-Type", "application/x-ns-proxy-autoconfig")
     w.Write([]byte(js))
   })
-  err := http.ListenAndServe(":80", nil)
+  http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+    w.Write([]byte("Hello World!"))
+  })
+  err := http.ListenAndServe(":10086", nil)
   if err != nil {
     panic(err)
   }
